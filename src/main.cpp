@@ -2810,6 +2810,40 @@ bool InitBlockIndex() {
         block.print();
         assert(hash == hashGenesisBlock);
 
+// If genesis block hash does not match, then generate new genesis hash.
+if (true && block.GetHash() != hashGenesisBlock)
+{
+    printf("Searching for genesis block...\n");
+    // This will figure out a valid hash and Nonce if you're
+    // creating a different genesis block:
+    uint256 hashTarget = CBigNum().SetCompact(block.nBits).getuint256();
+    uint256 thash;
+    char scratchpad[SCRYPT_SCRATCHPAD_SIZE];
+ 
+    loop
+    {
+        scrypt_1024_1_1_256_sp_generic(BEGIN(block.nVersion), BEGIN(thash), scratchpad);
+        if (thash <= hashTarget)
+            break;
+        if ((block.nNonce & 0xFFF) == 0)
+        {
+            printf("nonce %08X: hash = %s (target = %s)\n", block.nNonce, thash.ToString().c_str(), hashTarget.ToString().c_str());
+        }
+        ++block.nNonce;
+        if (block.nNonce == 0)
+        {
+            printf("NONCE WRAPPED, incrementing time\n");
+            ++block.nTime;
+        }
+    }
+    printf("block.nTime = %u \n", block.nTime);
+    printf("block.nNonce = %u \n", block.nNonce);
+    printf("block.GetHash = %s\n", block.GetHash().ToString().c_str());
+}
+ 
+ 
+ block.print();
+
         // Start new block file
         try {
             unsigned int nBlockSize = ::GetSerializeSize(block, SER_DISK, CLIENT_VERSION);
